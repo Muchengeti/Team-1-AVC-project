@@ -113,19 +113,19 @@ int move(int Error){
 	//printf("Error = %d\n ", Error); 
 
 	if(Error > 0) {
-		motor_speed =(int)((double)Error/800 *35 + 150);
-		set_motor(2, 200);
+		motor_speed =(int)((double)Error/800  + 150);
+		set_motor(2, 220);
 		set_motor(1,motor_speed);
 		//printf("Motor Speed = %d\n ", motor_speed);
 	}else if(Error < 0) {
-		motor_speed = -(int)((double)Error/800 *35 - 150);
+		motor_speed = -(int)((double)Error/800  - 150);
 		set_motor(2,motor_speed);
-		set_motor(1,200);
+		set_motor(1,220);
 		//printf("Motor Speed = %d\n ", motor_speed);
 	}
 
 	else{
-		motor_speed = 180;
+		motor_speed = 150;
 		set_motor(2,motor_speed);
 		set_motor(1, motor_speed);
 		//printf("Motor Speed = %d\n ", motor_speed);
@@ -180,13 +180,15 @@ bool is_right(){
 }
 int sharp_turn(bool left){
 	if(left == true){
+		sleep1(0, 350000);
 		set_motor(1, 180);
 		set_motor(2, -180);
-		sleep1(0, 350000);
+		sleep1(0, 400000);
 	}else{
+		sleep1(0, 350000);
 		set_motor(2, 180);
 		set_motor(1, -180);
-		sleep1(0, 350000);
+		sleep1(0, 400000);
 	}
 	return 0;
 }
@@ -196,4 +198,5 @@ int do_180(){
         sleep1(0, 800000);
 	return 0;
 }
+
 
