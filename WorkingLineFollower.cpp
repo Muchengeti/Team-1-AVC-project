@@ -1,21 +1,21 @@
 #include <stdio.h>
 #include <time.h>
 #include "E101.h"
-
 int checkPosition(int array[]);
-void move(int Error);
-void reverse();
+int move(int Error);
+int reverse();
+int degree90(int Error);
 bool is_left();
 bool is_right();
-void sharp_turn(bool left);
-int IR_Check(int analog);
+int sharp_turn(bool left);
 bool third_quadrant = false;
 double m = 1;
 int countright=0;
 int countleft=0;
-void do_180();
+int do_180();
 int reverse_count = 0;
-
+int IR_Check(int analog);
+void maze();
 int main(){ 
 
 	init();
@@ -24,9 +24,27 @@ int main(){
 	int whiteBinary = 1;
 	int PixelColours[32];
 	int Parse = 0;
+	int IRtestR = 0;
+	int IRtestL = 0;
+	int mazeThresh = 300;
+	
+	char addr[15] = {'1','3','0','.','1','9','5','.','6','.','1','9','6'};
+	connect_to_server(addr, 1024);
+	char to_serv[24]={'P','l','e','a','s','e',0};
+	send_to_serv(to_serv);
+	char from_serv[19];
+	receive_from_server(from_serv);
+	for(int length = 0; length < 6; length++){
+		to_serve[length] = from_serv[length];
+	}
+	send_to_serv(to_serve);
+	sleep1(1,0); 
 	while(1)
 	{
 	take_picture();
+			IRtestL = IR_Check(0);
+		IRtestR = IR_Check(1);
+		printf("Right %d,Left %d\n ", IRtestR,IRtestL);
 	//sleep1(0,20000);
 	for (int i=0; i<32; i++){
 
@@ -40,8 +58,13 @@ int main(){
 		{
 			PixelColours[i] = whiteBinary;
 		}
-
+		printf(" %d", PixelColours[i]);
 	}
+	printf("\n");
+	if (IRtestR > mazeThresh && IRtestL > mazeThresh)
+		{
+			maze();
+		}
 	Parse = checkPosition(PixelColours);
 	if(third_quadrant == false){
 		if(Parse == 999){
@@ -60,7 +83,7 @@ int main(){
 			printf("right\n");
 		}
 		 else if(Parse == 999 && is_left()==true && is_right() ==true){
-            sharp_turn(true);
+            sharp_turn(false);
             printf("both\n");
               
 			}else if (Parse == 999 && reverse_count > 9){
@@ -107,17 +130,17 @@ int checkPosition(int array[]){
 		return sum;
 	}
 }
-void move(int Error){
+int move(int Error){
 	int motor_speed =0; 
 	//printf("Error = %d\n ", Error); 
 
-	if(Error > 0) {
-		motor_speed =(int)((double)Error/800  + 150);
+	if(Error < 0) {
+		motor_speed =(int)((double)Error/800  + 160);
 		set_motor(2, 220);
 		set_motor(1,motor_speed);
 		//printf("Motor Speed = %d\n ", motor_speed);
-	}else if(Error < 0) {
-		motor_speed = -(int)((double)Error/800  - 150);
+	}else if(Error > 0) {
+		motor_speed = -(int)((double)Error/800  - 160);
 		set_motor(2,motor_speed);
 		set_motor(1,220);
 		//printf("Motor Speed = %d\n ", motor_speed);
@@ -130,13 +153,14 @@ void move(int Error){
 		//printf("Motor Speed = %d\n ", motor_speed);
 	} 
 
-
+	return 0;
 }
-void reverse(){
+int reverse(){
 	set_motor(1, -200);
 	set_motor(2, -200);
 	sleep1(0, 75000);
 	printf("\n reverse");
+	return 0;
 }
 bool is_left(){	
 	int countleft=0;
@@ -176,7 +200,7 @@ bool is_right(){
 		return false;
 	}
 }
-void sharp_turn(bool left){
+int sharp_turn(bool left){
 	if(left == true){
 		sleep1(0, 350000);
 		set_motor(1, 180);
@@ -188,21 +212,21 @@ void sharp_turn(bool left){
 		set_motor(1, -180);
 		sleep1(0, 400000);
 	}
+	return 0;
 }
-void do_180(){
+int do_180(){
 	set_motor(1, 190);
         set_motor(2, -190);
         sleep1(0, 800000);
+	return 0;
 }
-
 void maze()
 {
 	int IRS_L;
 	int IRS_R;
 	int IRS_F;
 	int wallThres = 300;
-	int objectThres = 100;
-	int reversecount = 0;
+	int moveForward = 400;
 	while(1)
 	{
 		IRS_L = IR_Check(0);
@@ -210,41 +234,42 @@ void maze()
 		IRS_F = IR_Check(2);
 		//sleep1(0,20000);
 		printf("Left = %d, Right = %d, Frount = %d", IRS_L, IRS_R, IRS_F);
-		if (IRS_L > IRS_R)
+		if (IRS_L > IRS_R && IRS_F < moveForward)
 		{
 			move(-800);
 		}
-		else if (IRS_L < IRS_R)
+		else if (IRS_R > IRS_L && IRS_F < moveForward)
 		{
 			move(800);
 		}
-		else if (IRS_L == IRS_R)
+		else if (IRS_L == IRS_R && IRS_F < moveForward)
 		{
 			move(0);
 		}
-		else if (IRS_L > wallThres)
+		else if (IRS_F >= moveForward && IRS_L > wallThres)
 		{
-			sleep1(0,400000);
+			
+			sharp_turn(false);
+			
+		}
+		else if (IRS_F > moveForward && IRS_R > wallThres)
+		{
+			
 			sharp_turn(true);
 		}
-		else if (IRS_R > wallThres)
-		{
-			sleep1(0,400000);
-			sharp_turn(false);
-		}
-		if (IRS_F < objectThres)
-		{
-			if (reversecount < 10)
-			{
-				reverse();
-				sleep1(0,200000);
-				reversecount++;
-			}
-			else
-			{
-				break;
-			}
-		}
+		//if (IRS_F < objectThres)
+		//{
+		//	if (reversecount < 10)
+		//	{
+		//		reverse();
+		//		sleep1(0,200000);
+		//		reversecount++;
+		//	}
+		//	else
+		//	{
+		//		break;
+		//	}
+		//}
 	}
 	while (1) //does doughnuts
 	{
@@ -265,4 +290,6 @@ int IR_Check(int analog)
 	IR = IR/5;
 	return IR;
 }
+
+
 
