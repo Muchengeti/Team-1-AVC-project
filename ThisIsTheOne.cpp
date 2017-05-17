@@ -15,6 +15,8 @@ int countright=0;
 int countleft=0;
 void do_180();
 int reverse_count = 0;
+int IR_Check(int analog);
+void maze();
 
 int main(){ 
 
@@ -24,6 +26,8 @@ int main(){
 	int whiteBinary = 1;
 	int PixelColours[32];
 	int Parse = 0;
+	int IRTestL = 0;
+	int IRTestR = 0;
 	while(1)
 	{
 	//gate();
@@ -274,7 +278,7 @@ void maze()
 	int IRS_F;
 	int wallThres = 300;
 	int moveForward = 300;
-	int objectThres = 600;
+	//int objectThres = 600;
 	//int reversecount = 0;
 	while(1)
 	{
@@ -288,9 +292,9 @@ void maze()
 		}else if(IRS_R < wallThres){
 			move(1600);
 		}else if(IRS_F < moveForward && IRS_L < IRS_R){
-			sharp_turn(false);
-		}else if(IRS_F < moveForward && IRS_L > IRS_R){
 			sharp_turn(true);
+		}else if(IRS_F < moveForward && IRS_L > IRS_R){
+			sharp_turn(false);
 		}
 }
 }
