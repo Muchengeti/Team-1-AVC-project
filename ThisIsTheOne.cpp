@@ -26,60 +26,132 @@ int main(){
 	int Parse = 0;
 	while(1)
 	{
-	take_picture();
-	//sleep1(0,20000);
-	for (int i=0; i<32; i++){
-
-		PixelColours[i] = get_pixel(120, i*10, 3);
-
-		if (PixelColours[i] < whiteThres)
+	//gate();
+		take_picture();
+		IRtestL = IR_Check(0);
+		IRtestR = IR_Check(1);
+		printf("Right %d,Left %d\n ", IRtestR,IRtestL);
+		//redcount = 0;
+		//sleep1(0,20000);
+		for (int i=0; i<32; i++)
 		{
-			PixelColours[i] = blackBinary;
+			PixelColours[i] = get_pixel(120, i*10, 3);
+			//RedPix[i] = get_pixel(120,i*10, 0);
+			if (PixelColours[i] < whiteThres)
+			{
+				PixelColours[i] = 0;
+			}
+			else
+			{
+				PixelColours[i] = 1;
+			}
+			//if (RedPix[i] > 200)
+			//{
+			//	RedPix[i] = 3;
+			//}
+			//else
+			//{
+			//	RedPix[i] = 0;
+			//}
+		}
+		//for (int i = 0; i < 32; i++)
+		//{
+			//if (RedPix[i] == 3)
+			//{
+			//	redcount++;
+			//}
+		//}
+		//printf("red = %d\n", redcount);
+		if (IRtestR > mazeThresh && IRtestL > mazeThresh)
+		{
+			break;
+		}
+		Parse = checkPosition(PixelColours);
+		if(third_quadrant == false){
+			if(Parse == 999)
+			{
+				reverse();
+			}
+			else if(Parse == 666)
+			{
+				third_quadrant =true;
+			}
+			else
+			{
+				move(Parse);
+			}
 		}
 		else
 		{
-			PixelColours[i] = whiteBinary;
-		}
-
-	}
-	Parse = checkPosition(PixelColours);
-	if(third_quadrant == false){
-		if(Parse == 999){
-			reverse();
-		}else if(Parse == 666){
-			third_quadrant =true;
-		}else {
-			move(Parse);
-		}
-	}else {
-		 if(Parse == 999 && is_left()==false && is_right() == true){
-			sharp_turn(true);
-			printf("left\n");
-		}else if(Parse == 999 && is_right()==false && is_left() == true){
-			sharp_turn(false);
-			printf("right\n");
-		}
-		 else if(Parse == 999 && is_left()==true && is_right() ==true){
-            sharp_turn(true);
-            printf("both\n");
-              
-			}else if (Parse == 999 && reverse_count > 9){
+			if(Parse == 999 && is_left()==false && is_right() == true)
+			{
+					sharp_turn(true);
+				//printf("left\n");
+			}
+			else if(Parse == 999 && is_right()==false && is_left() == true)
+			{
+				sharp_turn(false);
+				//printf("right\n");
+			}
+			else if(Parse == 999 && is_left()==true && is_right() ==true){
+            			sharp_turn(true);
+            			//printf("both\n");
+			}
+			else if (Parse == 999 && reverse_count > 9)
+			{
 				do_180();
 				reverse_count=0;
 			}
-        else if (Parse == 999 && is_left()==false && is_right() ==false){
+        		else if (Parse == 999 && is_left()==false && is_right() ==false)
+			{
 				reverse();
 				reverse_count++;
-				printf("reverse\n");
-		}
-		else{
-			move(Parse);
+				//printf("reverse\n");
+			}
+			else
+			{
+				move(Parse);
+			}
 		}
 	}
+	//edit
+	printf("MAZE\n");
+	maze();
+	//edit close
+	return 0;
 }
 
-
-	return 0;
+/** recevies an array and determines where the line is
+* returns the 'weight' of position in relation to the line */
+int checkPosition(int array[])
+{
+	int sum=0;
+	int count=0;
+	int countwhite=0;
+	for(int i=0; i < 32; i++)
+	{
+		if(array[i] == 1)
+		{
+			sum = sum + (i-16.5)*5;
+			countwhite++;
+		}
+		else
+		{
+			count++;
+		}
+	}
+	if (count == 32)
+	{
+		return 999;
+	}
+	else if (countwhite == 32)
+	{
+		return 666;
+	}
+	else
+	{
+		return sum;
+	}
 }
 
 int checkPosition(int array[]){
@@ -201,62 +273,33 @@ void maze()
 	int IRS_R;
 	int IRS_F;
 	int wallThres = 300;
-	int objectThres = 100;
-	int reversecount = 0;
+	int moveForward = 300;
+	int objectThres = 600;
+	//int reversecount = 0;
 	while(1)
 	{
 		IRS_L = IR_Check(0);
 		IRS_R = IR_Check(1);
 		IRS_F = IR_Check(2);
 		//sleep1(0,20000);
-		printf("Left = %d, Right = %d, Frount = %d", IRS_L, IRS_R, IRS_F);
-		if (IRS_L > IRS_R)
-		{
-			move(-800);
-		}
-		else if (IRS_L < IRS_R)
-		{
-			move(800);
-		}
-		else if (IRS_L == IRS_R)
-		{
-			move(0);
-		}
-		else if (IRS_L > wallThres)
-		{
-			sleep1(0,400000);
+		printf("Left = %d, Right = %d, Front = %d \n", IRS_L, IRS_R, IRS_F);
+		if(IRS_L < wallThres){
+			move(-1600);
+		}else if(IRS_R < wallThres){
+			move(1600);
+		}else if(IRS_F < moveForward && IRS_L < IRS_R){
+			sharp_turn(false);
+		}else if(IRS_F < moveForward && IRS_L > IRS_R){
 			sharp_turn(true);
 		}
-		else if (IRS_R > wallThres)
-		{
-			sleep1(0,400000);
-			sharp_turn(false);
-		}
-		if (IRS_F < objectThres)
-		{
-			if (reversecount < 10)
-			{
-				reverse();
-				sleep1(0,200000);
-				reversecount++;
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-	while (1) //does doughnuts
-	{
-		sharp_turn(true);
-	}
+}
 }
 
 /** takes IR reading and averages them
 * call IR readings via ir.(L/R/F) */
 int IR_Check(int analog)
 {
-	int IR = 0; //analog 0 is left, 1 is right, 2 is frount
+	int IR = 0; //analog 0 is left, 1 is right, 2 is front
 	/** checking average readings to account for noise */
 	for(int i = 0; i < 5; i++)
 	{
@@ -266,3 +309,8 @@ int IR_Check(int analog)
 	return IR;
 }
 
+/** Opens the gate */
+void gate()
+{
+
+}
